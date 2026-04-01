@@ -29,12 +29,15 @@
             height: 100vh;
             background-color: black;
             z-index: 9999;
+            /* Добавили флексы для центровки */
+            align-items: center;
+            justify-content: center;
         }
 
         #screamer-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+            width: 90%; /* Сделали чуть меньше экрана */
+            height: 90%;
+            object-fit: contain; /* Теперь видео влезет целиком без обрезки */
             /* Легкая тряска для большего ужаса */
             animation: shake 0.1s infinite; 
         }
@@ -199,8 +202,8 @@
         function triggerScreamer() {
             // Прячем всё остальное
             step3.classList.add('hidden');
-            // Показываем жесть
-            screamerContainer.style.display = 'block';
+            // Показываем жесть (теперь используем flex вместо block для центровки)
+            screamerContainer.style.display = 'flex';
             
             // Врубаем звук на максимум
             audio.volume = 1.0;
