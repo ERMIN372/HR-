@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Внутренний портал | Расчет KPI и премий 2026</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Скрываем скроллбары для полного погружения */
+        body { overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        
+        /* Тот самый микро-текст, который заставит жертву прижаться к экрану */
+        .micro-text {
+            font-size: 4px; /* Да, 4 пикселя. Пусть ломают глаза! */
+            line-height: 1.2;
+            color: #64748b;
+            cursor: crosshair;
+            user-select: none;
+            transition: opacity 2s ease-in;
+        }
+
+        /* Экран со скримером */
+        #screamer-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: black;
+            z-index: 9999;
+        }
+
+        #screamer-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            /* Легкая тряска для большего ужаса */
+            animation: shake 0.1s infinite; 
+        }
+
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+
+        /* Кастомный прогресс-бар */
+        .progress-bar-fill {
+            transition: width 0.2s ease;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 h-screen w-screen flex flex-col items-center justify-center">
+
+    <!-- ЗВУК СКРИМЕРА. ЗАМЕНИ ССЫЛКУ В src НА СВОЮ (mp3, wav) -->
+    <!-- Сейчас стоит дефолтный страшный звук из открытой библиотеки -->
+    <audio id="screamer-audio" src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3" preload="auto"></audio>
+
+    <!-- ЭКРАН 1: ФОРМА ВВОДА (Максимально душный дизайн) -->
+    <div id="step-1" class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md border border-slate-200">
+        <div class="flex items-center space-x-3 mb-6 border-b pb-4">
+            <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            <h1 class="text-xl font-bold text-slate-700">Корпоративный портал</h1>
+        </div>
+        
+        <h2 class="text-lg font-semibold mb-4 text-center">Калькулятор премий и KPI</h2>
+        
+        <form id="kpi-form" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-slate-600 mb-1">ФИО сотрудника</label>
+                <input type="text" required class="w-full px-4 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Иванов Иван Иванович">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-600 mb-1">Занимаемая должность</label>
+                <input type="text" required class="w-full px-4 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Менеджер / Разработчик">
+            </div>
+            <div class="pt-2">
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-4 rounded transition duration-200 shadow-md">
+                    Рассчитать премию за квартал
+                </button>
+            </div>
+            <p class="text-xs text-center text-slate-400 mt-4">Авторизация через корпоративную сеть. Все действия логируются.</p>
+        </form>
+    </div>
+
+    <!-- ЭКРАН 2: ЗАГРУЗКА (Имитация бурной деятельности) -->
+    <div id="step-2" class="hidden bg-white p-8 rounded-lg shadow-xl w-full max-w-md border border-slate-200 text-center">
+        <h2 class="text-xl font-bold text-slate-700 mb-6">Обработка данных...</h2>
+        
+        <div class="w-full bg-slate-200 rounded-full h-4 mb-4 overflow-hidden">
+            <div id="progress-bar" class="bg-blue-600 h-4 rounded-full progress-bar-fill" style="width: 0%"></div>
+        </div>
+        
+        <p id="status-text" class="text-sm text-slate-500 font-mono h-6">Подключение к базе 1С...</p>
+    </div>
+
+    <!-- ЭКРАН 3: ЛОВУШКА ДЛЯ ГЛАЗ (Микро-текст) -->
+    <div id="step-3" class="hidden w-full h-full flex items-center justify-center bg-white p-4">
+        <div class="max-w-3xl text-center">
+            <h2 class="text-2xl font-bold text-slate-800 mb-2">Расчет успешно завершен</h2>
+            <p class="text-slate-600 mb-8">Для перечисления средств на зарплатную карту, пожалуйста, внимательно ознакомьтесь с условиями начисления ниже.</p>
+            
+            <div class="border border-slate-300 p-8 rounded bg-slate-50 relative overflow-hidden h-64 flex items-center justify-center cursor-crosshair">
+                <p class="text-xs text-slate-400 absolute top-2 left-0 w-full text-center">Внимание: Подтверждение происходит автоматически при прочтении</p>
+                <!-- Тот самый мелкий текст -->
+                <p class="micro-text mt-4">
+                    В соответствии с пунктом 4.1.2 дополнительного соглашения к трудовому договору, премия начисляется только при условии полного и безоговорочного выполнения всех поставленных задач в срок. Сумма премии, указанная в расчетном листе, может быть изменена работодателем в одностороннем порядке в зависимости от финансовых показателей отдела. В случае обнаружения нецелевого использования рабочего времени (просмотр развлекательных сайтов, длительные перерывы), премия аннулируется. Если вы смогли прочитать этот текст, значит у вас слишком много свободного времени. Наклонитесь еще ближе, чтобы увидеть точную сумму выплат...
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ЭКРАН 4: САМ СКРИМЕР 💀 -->
+    <div id="screamer-container">
+        <!-- КАРТИНКА СКРИМЕРА ТЯНЕТСЯ ИЗ ТВОЕГО РЕПОЗИТОРИЯ -->
+        <!-- Закинь файл с именем screamer.jpg в ту же папку на GitHub -->
+        <img id="screamer-img" src="./screamer.jpg" alt="BOO!">
+    </div>
+
+    <script>
+        const form = document.getElementById('kpi-form');
+        const step1 = document.getElementById('step-1');
+        const step2 = document.getElementById('step-2');
+        const step3 = document.getElementById('step-3');
+        const screamerContainer = document.getElementById('screamer-container');
+        
+        const progressBar = document.getElementById('progress-bar');
+        const statusText = document.getElementById('status-text');
+        const audio = document.getElementById('screamer-audio');
+
+        const statuses = [
+            "Анализ отработанных часов...",
+            "Проверка жалоб от руководства...",
+            "Оценка уровня стрессоустойчивости...",
+            "Вычисление коэффициента полезного действия...",
+            "Формирование итоговой суммы..."
+        ];
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // МАГИЯ №1: Разблокируем аудио (политика браузеров требует клика пользователя)
+            audio.play().then(() => {
+                audio.pause();
+                audio.currentTime = 0;
+            }).catch(err => console.log("Audio unlock failed, will try again later."));
+
+            // МАГИЯ №2: Пытаемся закинуть в FullScreen для эффекта безысходности
+            try {
+                document.documentElement.requestFullscreen();
+            } catch (err) {
+                console.log("Fullscreen blocked, whatever.");
+            }
+
+            // Прячем форму, показываем загрузку
+            step1.classList.add('hidden');
+            step2.classList.remove('hidden');
+
+            // Анимация фальшивого прогресс-бара
+            let progress = 0;
+            let statusIndex = 0;
+            
+            const loadingInterval = setInterval(() => {
+                progress += Math.floor(Math.random() * 15) + 5;
+                if (progress > 100) progress = 100;
+                
+                progressBar.style.width = `${progress}%`;
+
+                // Меняем текст статуса
+                if (progress % 20 < 10 && statusIndex < statuses.length) {
+                    statusText.innerText = statuses[statusIndex];
+                    statusIndex++;
+                }
+
+                if (progress === 100) {
+                    clearInterval(loadingInterval);
+                    setTimeout(showTinyText, 1000); // Небольшая пауза перед показом результата
+                }
+            }, 600); // Скорость заполнения бара
+        });
+
+        function showTinyText() {
+            step2.classList.add('hidden');
+            step3.classList.remove('hidden');
+
+            // МАГИЯ №3: Ждем ровно столько, чтобы жертва успела прищуриться и наклониться к экрану
+            // 6.5 секунд - идеальное время, чтобы человек начал читать мелкий шрифт
+            setTimeout(triggerScreamer, 6500);
+        }
+
+        function triggerScreamer() {
+            // Прячем всё остальное
+            step3.classList.add('hidden');
+            // Показываем жесть
+            screamerContainer.style.display = 'block';
+            
+            // Врубаем звук на максимум
+            audio.volume = 1.0;
+            audio.play();
+
+            // Опционально: убираем картинку через 3 секунды, оставляя черный экран, чтобы человек вообще обалдел
+            setTimeout(() => {
+                document.getElementById('screamer-img').style.display = 'none';
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
